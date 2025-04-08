@@ -1,80 +1,63 @@
-#include <stdio.h> 
-#include <stdlib.h>
-#include <limits.h>
+#include<stdio.h>
+#include<stdlib.h>
 
-struct Link {
-	int hop, dest, wt;
-};
+#define MAX 10
 
-struct Network {
-	int H, L;
-	struct Link *link;
-};
+int cost[MAX][MAX];
+int dist[MAX][MAX];
+int next[MAX][MAX];
+int nodes;
 
-int main() {
-	int H, L, S, i, j;
-	
-	printf("Enter The Number Of Hops: ");
-	scanf("%d", &H);
-	printf("Enter The Number Of Links: ");
-	scanf("%d", &L);
-	printf("Enter The Source Node: ");
-	scanf("%d", &S);
-	
-	// Memory Allocation For Network
-	struct Network *n = (struct Network *)malloc(sizeof(struct Network));
-	n -> H = H;
-	n -> L = L;
-	n -> link = (struct Link *)malloc(L * sizeof(struct Link));
-	
-	// Distance Array Initialization
-	int *dist = (int *)malloc(H * sizeof(int));
-	for (i = 0; i < H; i++) {
-		dist[i] = INT_MAX;
-	}
-	dist[S] = 0;
-	
-	// Links Initialization
-	for (i = 0; i < L; i++) {
-		printf("\nLink %d: Enter Source, Destination & Weight: ", i + 1);
-		scanf("%d %d %d", &n -> link[i].hop, &n -> link[i].dest, &n -> link[i].wt);
-	}
-	
-	// Bellman - Ford Algorithm
-	for (i = 0; i < H; i++) {
-		for (j = 0; j < L; j++) {
-			int u = n -> link[j].hop;
-			int v = n -> link[j].dest;
-			int wt = n -> link[j].wt;
-			
-			if (dist[u] != INT_MAX && dist[u] + wt < dist[v])
-				dist[v] = dist[u] + wt;
-		}
-	}	
-		
-	// Checking For Negative Weights
-	for (i = 0; i < L; i++) {
-		int u = n -> link[i].hop;
-		int v = n -> link[i].dest;
-		int wt = n -> link[i].wt;
-			
-		if (dist[u] != INT_MAX && dist[u] + wt < dist[v]) {
-			printf("Network Contains Negative Weight Cycle\n");
-			free(n -> link);
-			free(n);
-			free(dist);
-			return 0;
+void initialise(){
+	for(int i=0;i<nodes;i++){
+		for(int j=0;j<nodes;j++){
+			dist[i][j] = cost[i][j];
+			next[i][j] = j;
 		}
 	}
-	
-	printf("\nHop\tDistance From Source\n");
-	for (i = 0; i < H; i++) {
-		printf("%d\t%d\n", i, dist[i]);
+}
+
+void dvr(){
+	int updated;
+	do{
+		updated = 0;
+		for(int i=0;i<nodes;i++){
+			for(int j=0;j<nodes;j++){
+				for(int k=0;k<nodes;k++){
+					if(dist[i][j]>dist[i][k]+dist[k][j]){
+						dist[i][j] = dist[i][k]+dist[k][j];
+						next[i][j] = next[i][k];
+						updated = 1;
+					}
+				}
+			}
+		}
+	}while(updated);
+}
+
+void print(){
+	printf("ROUTING TABLES:\n");
+	for(int i=0;i<nodes;i++){
+		printf("Routing Table for Node %d\n",i+1);
+		printf("Node\t Distance\t NextHop\n");
+		for(int j=0;j<nodes;j++){
+			printf("%d\t%10d\t%10d\n",j+1,dist[i][j],next[i][j]+1);
+		}
 	}
-	
-	free(n -> link);
-	free(n);
-	free(dist);
-	
+}
+
+int main(){
+	printf("Enter the number of nodes:");
+	scanf("%d",&nodes);
+	printf("Enter the cost matrix of the Nodes(0 for same node, 9999 for infinity)\n");
+	for(int i=0;i<nodes;i++){
+		printf("Node %d:",i+1);
+		for(int j=0;j<nodes;j++){
+			scanf("%d",&cost[i][j]);
+		}
+	}
+	initialise();
+	dvr();
+	print();
 	return 0;
 }
